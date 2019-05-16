@@ -34,6 +34,6 @@ if __name__ == "__main__":
     insertDB(conn)
     conn.close()
     print(time.time()-start)
-
+    print(1)
 
 # 共1787443个用户，其中7636用户无关注者
