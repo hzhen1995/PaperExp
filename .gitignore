@@ -1,3 +1,2 @@
 .idea
-resources
-__pycache__
+src/resources
