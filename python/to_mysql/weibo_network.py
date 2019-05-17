@@ -19,16 +19,12 @@ def insertDB(conn):
                     temp[2] += "#"+user[i]
             values = (int(user[0]), int(user[1]), temp[0].strip("#"), temp[1], temp[2].strip("#"))
             values_list.append(values)
-            if count % 50000 == 0:
+            if (count % 50000 == 0) or (count == 1787443):
                 print(count)
                 start = time.time()
                 conn.executeMany(sql, values_list)
                 values_list = []
                 print(time.time() - start)
-        print(count)
-        start = time.time()
-        conn.executeMany(sql, values_list)
-        print(time.time() - start)
 
 
 if __name__ == "__main__":

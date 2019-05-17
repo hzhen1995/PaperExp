@@ -26,6 +26,16 @@
 #     print(y)
 #     print(time.time())
 
-r = [1, 2, 3, 4]
-for one in range(1, len(r)):
-    print(r[one])
+#
+import time
+
+s = set()
+for i in range(2000000):
+    s.add(i)
+
+print(s.__sizeof__())
+
+tim = time.time()
+if 1900000 in s:
+    print(10000000)
+print(time.time()-tim)

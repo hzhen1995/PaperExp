@@ -6,19 +6,15 @@ def insertDB(conn):
     with open("../../resources/uidlist.txt", "r") as fr:
         sql = "insert into uidlist (user_id, map_id) VALUES (%s, %s)"
         values_list = list()
-        for count, line in enumerate(fr):
+        for count, line in enumerate(fr, 1):
             values = (line, count)
             values_list.append(values)
-            if len(values_list) == 50000:
+            if (count % 50000 == 0) or (count == 1787443):
                 print(count)
                 start = time.time()
                 conn.executeMany(sql, values_list)
                 values_list = list()
                 print(time.time() - start)
-        print(count)
-        start = time.time()
-        conn.executeMany(sql, values_list)
-        print(time.time() - start)
 
 
 if __name__ == "__main__":

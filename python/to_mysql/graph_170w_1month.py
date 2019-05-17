@@ -8,7 +8,7 @@ def insertDB(conn):
         value_list = []
         next(fr)
         pre_info = [0, "3", 1, 1]
-        for i, line in enumerate(fr, 1):
+        for count, line in enumerate(fr, 1):
             user = line.strip().split(" ")
             if (int(user[0]) == pre_info[0]) and (int(user[2]) == pre_info[2]):
                 pre_info[1] += "#" + user[1]
@@ -18,13 +18,13 @@ def insertDB(conn):
                 pre_info = [int(user[0]), user[1], int(user[2]), 1]
 
             if len(value_list) == 50000:
-                print(i)
+                print(count)
                 start = time.time()
                 conn.executeMany(sql, value_list)
                 value_list = []
                 print("内部", time.time() - start)
         start = time.time()
-        print(i)
+        print(count)
         value_list.append(tuple(pre_info))
         conn.executeMany(sql, value_list)
         print("外部", time.time() - start)
@@ -63,11 +63,9 @@ def transformDB(conn):
 if __name__ == "__main__":
     start = time.time()
     conn = DB.MysqlConn()
-    insertDB(conn)
-    transformDB(conn)
+    # insertDB(conn)
+    # transformDB(conn)
     conn.close()
     print(time.time() - start)
 
-
-
-# 共423347905条
+# 共423347904条记录
