@@ -59,6 +59,7 @@ def transformDB(conn):
     conn.executeMany(sql_insert, value_list)
     print("外部", time.time() - start)
 
+
 if __name__ == "__main__":
     start = time.time()
     conn = DB.MysqlConn()
