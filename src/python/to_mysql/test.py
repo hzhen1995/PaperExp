@@ -26,5 +26,6 @@
 #     print(y)
 #     print(time.time())
 
-a = [2,3,4]
-print(tuple(a))
+r = [1, 2, 3, 4]
+for one in range(1, len(r)):
+    print(r[one])

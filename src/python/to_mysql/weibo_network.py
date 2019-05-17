@@ -9,22 +9,23 @@ def insertDB(conn):
         next(fr)
         values_list = []
         for count, line in enumerate(fr, 1):
-            # oneUser = [int(x) for x in line.strip().split("	")]
+            # user = [int(x) for x in line.strip().split("	")]
             user = line.strip().split("	")
             temp = ["", 0, ""]
             for i in range(2, len(user), 2):
                 temp[0] += "#"+user[i]
-                if user[i+1]=="1":
+                if user[i+1] == "1":
                     temp[1] += 1
                     temp[2] += "#"+user[i]
             values = (int(user[0]), int(user[1]), temp[0].strip("#"), temp[1], temp[2].strip("#"))
             values_list.append(values)
-            if count % 50 == 0:
+            if count % 50000 == 0:
                 print(count)
                 start = time.time()
                 conn.executeMany(sql, values_list)
-                values_list = list()
+                values_list = []
                 print(time.time() - start)
+        print(count)
         start = time.time()
         conn.executeMany(sql, values_list)
         print(time.time() - start)
