@@ -1,4 +1,4 @@
-import main.DB as DB
+import db.DB as DB
 import time
 
 
