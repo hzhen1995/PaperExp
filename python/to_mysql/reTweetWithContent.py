@@ -1,40 +1,24 @@
-import main.DB as DB
+import db.DB as DB
 import time
 import os
 
-def insertDB(conn):
-    files = os.listdir("../resources/retweetWithContent")
+
+def insertDB_copy(conn):
+    files = os.listdir("../../resources/retweetWithContent")
     sql = "insert into retweetWithContent1 (retweet_mid, retweet_uid, retweet_time, retweet_text, original_mid) VALUES (%s, %s, %s, %s, %s)"
-    count = 0
-    file_count = 0
-    for file in files:
-        file_count += 1
-        if file_count<5:
-            continue
-        print("第 ", file_count, " 个文件")
-        with open("../resources/retweetWithContent/"+file, "r") as fr:
-            values_list = list()
-            original = list()
-            pre_line = list()
-            is_retweet = False
-            is_retweet_text=False
-            for line in fr:
-                if (line.strip().isdigit())&(len(pre_line)==4):
-                    original = pre_line
-                    is_retweet = True
-                    is_retweet_text = False
-                else:
-                    if is_retweet:
-                        if is_retweet_text:
-                            one_retweet = [pre_line[2], pre_line[0], pre_line[1], line.strip(), original[0]]
-                            values_list.append(one_retweet)
-                            is_retweet_text = False
-                        else:
-                            is_retweet_text = True
-                pre_line = line.strip().split("	")
-                count += 1
+    for i, file in enumerate(files, 1):
+        print("第 ", i, " 个文件")
+        with open("../../resources/retweetWithContent/"+file, "r") as fr:
+            values_list = []
+            original_info = fr.readline().strip().split("	")
+            for count, line in enumerate(fr, 1):
+                for re_with_num in range(int(line.strip())):
+                    temp = fr.readline().strip().split("	")
+                    one_retweet = [temp[2], temp[0], temp[1], fr.readline().strip(), original_info[0]]
+                    values_list.append(one_retweet)
+                original_info = fr.readline().strip().split("	")
+
                 if len(values_list) == 10000:
-                    print(count)
                     start = time.time()
                     conn.executeMany(sql, values_list)
                     values_list = list()
@@ -43,185 +27,12 @@ def insertDB(conn):
             start = time.time()
             conn.executeMany(sql, values_list)
             print(time.time() - start)
-        print("等待10秒。。。。是否执行下一个文件")
-        for i in range(10):
-            time.sleep(1)
-            print(i+1)
 
-def insertDB2(conn):
-    files = os.listdir("../resources/retweetWithContent_")
-    sql = "insert into retweetWithContent (retweet_mid, retweet_uid, retweet_time, retweet_text, original_mid) VALUES (%s, %s, %s, %s, %s)"
-    file_count = 0
-    for file in files:
-        file_count += 1
-        if file_count < 3:
-            continue
-        print("第 ", file_count, " 个文件")
-        with open("../resources/retweetWithContent_/"+file, "r") as fr:
-            values_list = list()
-            for line in fr:
-                one_retweet = line.strip().split("##%%&&==")
-                values_list.append(one_retweet)
-            print("转发微博数", len(values_list))
-            start = time.time()
-            conn.executeMany(sql, values_list)
-            print(time.time() - start)
-        print("等待10秒。。。。是否执行下一个文件")
-        for i in range(10):
-            time.sleep(1)
-            print(i+1)
 
-def updateDB(conn):
-    files = os.listdir("../resources/retweetWithContent")
-    sql_update = "update root_content set original_uid=%s, original_time=%s, retweet_num=%s, re_content_num=%s  where original_mid=%s"
-    sql_select = "select map_id from uidlist where user_id=%s"
-    sql_select2 = "select re_content_num from root_content where original_mid=%s"
-    for file in files:
-        with open("../resources/retweetWithContent/" + file, "r") as fr:
-            count = 0
-            values_list = list()
-            pre_line = list()
-            for line in fr:
-                if (line.strip().isdigit())&(len(pre_line)==4):
-                    uid = conn.select(sql_select, pre_line[1])
-                    re_content = conn.select(sql_select2, pre_line[1])
-                    if len(uid)>0:
-                        uid = uid[0][0]
-                    else:
-                        uid = -1
-                    if len(re_content)>0:
-                        re_content = re_content[0][0] + int(line.strip())
-                    else:
-                        re_content = line.strip()
-                    values = [uid, pre_line[2], pre_line[3], re_content, pre_line[0]]
-                    values_list.append(values)
-                pre_line = line.strip().split("	")
-                count += 1
-                if len(values_list) == 50000:
-                    print(count)
-                    start = time.time()
-                    conn.executeMany(sql_update, values_list)
-                    values_list = list()
-                    print(time.time() - start)
-            print(count)
-            start = time.time()
-            conn.executeMany(sql_update, values_list)
-            print(time.time() - start)
-
-def insertFile():
-    files = os.listdir("../resources/retweetWithContent")
-    count = 0
-    file_count = 0
-    re_count = 0
-    for file in files:
-        file_count += 1
-        with open("../resources/retweetWithContent/"+file, "r") as fr:
-            values_list = list()
-            original = list()
-            pre_line = list()
-            is_retweet = False
-            is_retweet_text=False
-            for line in fr:
-                if (line.strip().isdigit())&(len(pre_line)==4):
-                    original = pre_line
-                    is_retweet = True
-                    is_retweet_text = False
-                else:
-                    if is_retweet:
-                        if is_retweet_text:
-                            one_retweet = [pre_line[2], pre_line[0], pre_line[1], line.strip(), original[0]]
-                            values_list.append(one_retweet)
-                            is_retweet_text = False
-                        else:
-                            is_retweet_text = True
-                pre_line = line.strip().split("	")
-                count += 1
-            re_count += len(values_list)
-            print("第"+str(file_count)+"累计转发微博数:", str(re_count))
-            with open("../resources/retweetWithContent_/" + file, "w+") as fw:
-                for values in values_list:
-                    one = values[0]+"	"+values[1]+"	"+values[2]+"	"+values[3]+"	"+values[4]+"\n"
-                    fw.write(one)
-
-def insertFile2(conn):
-    files = os.listdir("../resources/retweetWithContent")
-    sql_select = "select map_id from uidlist where user_id=%s"
-    original_dic = readFile2()
-    user_dic = {}
-    file_count = 0
-    for file in files:
-        file_count += 1
-        print("第" + str(file_count) + " 个文件")
-        with open("../resources/retweetWithContent/" + file, "r") as fr:
-            pre_line = list()
-            for line in fr:
-                if (line.strip().isdigit()) & (len(pre_line) == 4):
-                    if pre_line[0] in original_dic:
-                        known = original_dic[pre_line[0]]
-                        if len(known)==5:
-                            temp = [known[0], known[1], known[2], known[3], line.strip(), known[4]]
-                        elif len(known)==6:
-                            re_num = int(line.strip())+int(known[4])
-                            temp = [known[0], known[1], known[2], known[3], re_num, known[5]]
-                        else:
-                            temp = ["", "", "", "", "", "", ""]
-                            print("字典出错")
-                        original_dic[pre_line[0]] = temp
-                    else:
-                        if pre_line[1] in user_dic:
-                            uid = user_dic[pre_line[1]]
-                        else:
-                            uid = conn.select(sql_select, pre_line[1])
-                            if len(uid) > 0:
-                                uid = uid[0][0]
-                                user_dic[pre_line[1]] =uid
-                            else:
-                                uid = -1
-                        temp = [pre_line[0], pre_line[2], uid, pre_line[3], line.strip(), 0]
-                        original_dic[pre_line[0]] = temp
-                pre_line = line.strip().split("	")
-    with open("../resources/root_content/other_message2.txt", "w+", encoding="gbk") as fw:
-        for original in original_dic:
-            original = original_dic[original]
-            if len(original)==6:
-                line = str(original[0])+" "+str(original[1])+" "+str(original[2])+" "+str(original[3])+" "+str(original[4])+" "+str(original[5])+"\n"
-            elif len(original)==5:
-                line = str(original[0])+" "+str(original[1])+" "+str(original[2])+" "+str(original[3])+" "+str(0)+" "+str(original[4])+"\n"
-            else:
-                line = ""+"\n"
-                print("无")
-            fw.write(line)
-    print("用户字典大小:", len(user_dic))
-
-def readFile():
-    files = os.listdir("../resources/retweetWithContent_")
-    count = 0
-    file_count = 0
-    for file in files:
-        file_count += 1
-        with open("../resources/retweetWithContent_/" + file, "r") as fr:
-            for i in fr:
-                if "3464585309142627" in i:
-                    print(i)
-                    count += 1
-        print("第 "+str(file_count)+" 个文件 ")
-    print("第"+str(count)+"条")
-
-def readFile2():
-    with open("../resources/root_content/other_message.txt", "r", encoding="gbk") as fr:
-        original_dic = dict()
-        for original in fr:
-            original = original.strip().split(" ")
-            original_dic[original[0]] = original
-    return original_dic
 if __name__ == "__main__":
     start = time.time()
     conn = DB.MysqlConn()
-    # insertDB(conn)
-    # updateDB(conn)
-    # insertFile()
-    readFile()
-    # insertFile2(conn)
+    # insertDB_copy(conn)
     conn.close()
     print(time.time() - start)
 
