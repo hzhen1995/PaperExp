@@ -3,7 +3,6 @@ import time
 
 conn = DB.MysqlConn()
 
-
 def select_users(args):
     if len(args) == 0:
         return False
@@ -21,14 +20,11 @@ def select_friends(args):
     return friends
 
 def select_fans_num(args):
-    sql_temp = ""
-    # if len(args) != 0:
-    #     sql_temp += "where user_id=%s "
-    #     for i in range(len(args) - 1):
-    #         sql_temp += "or user_id=%s "
-    sql = "select followers_count from user_profile " + sql_temp
+    sql = "select followers_count from user_profile where user_id in " \
+          "(select user_id from uidlist where map_id in %s)"
     r = conn.select(sql, args)
-    return r
+    fans_num = sum(i[0] for i in r)
+    return fans_num
 
 def save_user_graph(args):
     # 获取全部用户map_id
@@ -49,28 +45,16 @@ def save_user_graph(args):
                 print(i)
     print("用户边：", edges_num)
     print(time.time()-s)
-save_user_graph({3338745751776606, 3338812282191870})
-
-def user_info(args):
-    # 获取全部用户map_id
-    users = select_users(args)
-    print("所选用户群体：", users.__len__())
-    for i, user_id in enumerate(users, 1):
-        friends = select_friends([user_id])
-        friends_list = friends[0][0].strip().split("#")
-        for friend in friends_list:
-            if friend != '':
-                print(str(user_id) + " " + friend + "\n")
-        if i % 50 == 0:
-            print(i)
-
 
 if __name__ == '__main__':
+    # save_user_graph({3338745751776606, 3338812282191870})
     conn.close()
 
 
 # 7.23事件
 # 原创微博{3338745751776606, 3338812282191870}
 # 本数据参与用户1461，内部边1260
-# 参与用户与好友（关注）共182923，边468278
-# 参与用户中平均每用户320位好友，
+# 参与用户与好友（关注者）共182923，边468278（参与用户的关注总量）
+# 参与用户中平均每用户320位好友
+# 参与用户与粉丝（追随者）共??????，边11328861（参与用户的粉丝总量）
+# 参与用户中平均每用户7754位粉丝
