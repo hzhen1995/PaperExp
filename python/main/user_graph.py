@@ -1,6 +1,7 @@
 import argparse
 import db.DB as DB
 import time
+import random
 import networkx as nx
 import node2vec as node2vec
 import warnings
@@ -59,10 +60,10 @@ def parse_args():
     parser.add_argument('--input', nargs='?', default='user_graph.txt', help='Input graph path')
     parser.add_argument('--output', nargs='?', default='user_vec.model', help='Embeddings path')
     parser.add_argument('--dimensions', type=int, default=128, help='Number of dimensions. Default is 128.')
-    parser.add_argument('--walk-length', type=int, default=80, help='Length of walk per source. Default is 80.')
-    parser.add_argument('--num-walks', type=int, default=10, help='Number of walks per source. Default is 10.')
-    parser.add_argument('--window-size', type=int, default=10, help='Context size for optimization. Default is 10.')
-    parser.add_argument('--iter', default=1, type=int, help='Number of epochs in SGD')
+    parser.add_argument('--walk-length', type=int, default=20, help='Length of walk per source. Default is 80.')
+    parser.add_argument('--num-walks', type=int, default=20, help='Number of walks per source. Default is 10.')
+    parser.add_argument('--window-size', type=int, default=4, help='Context size for optimization. Default is 10.')
+    parser.add_argument('--iter', default=10, type=int, help='Number of epochs in SGD')
     parser.add_argument('--p', type=float, default=1, help='Return hyperparameter. Default is 1.')
     parser.add_argument('--q', type=float, default=1, help='Inout hyperparameter. Default is 1.')
 
@@ -104,12 +105,15 @@ def main(args):
 
 if __name__ == '__main__':
     # write_user_graph({3338745751776606, 3338812282191870})
-    # args = parse_args()
-    # main(args)
+    args = parse_args()
+    main(args)
     model = KeyedVectors.load('user_vec.model')
 
     topn = 10
-    for index in model.wv.index2entity:
+    total = [0, 0]
+    # users = random.sample(model.wv.index2entity, 10)
+    users = model.wv.index2entity[:10]
+    for index in users:
         friends_num = 0
         fans_num = 0
         for similar in model.wv.most_similar(index, topn=topn):
@@ -120,10 +124,12 @@ if __name__ == '__main__':
                 friends_num += 1
             if index in fans:
                 fans_num += 1
-
+        total[0] += friends_num
+        total[1] += fans_num
         print("相似用户中好友占比：%s，粉丝的占比：%s，无关系的占比%s，" %
               (friends_num/topn, fans_num/topn, (topn-friends_num-fans_num)/topn))
-
+    print("总占比：好友%s，粉丝%s，无关系%s，" %
+          (total[0]/(topn*10), total[1]/(topn*10), (topn*10-total[0]-total[1])/(topn*10)))
 # 7.23事件
 # 原创微博{3338745751776606, 3338812282191870}
 # 本数据参与用户1461，内部边1260
