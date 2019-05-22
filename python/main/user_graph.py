@@ -46,14 +46,14 @@ def write_user_graph(params):
             friends = select_friends({user_id})
             for friend in friends:
                 # 仅使用参与用户构造网络
-                if (friend != '') and (int(friend) in users):
+                if (friend != ''):
                     edges_num += 1
-                    fw.write(str(user_id) + " " + friend + "\n")
+                    fw.write(friend + " " + str(user_id) + "\n")
             if i % 50 == 0:
                 print(i)
     print("用户边：", edges_num)
     print(time.time()-s)
-    conn.close()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run node2vec.")
@@ -64,8 +64,8 @@ def parse_args():
     parser.add_argument('--num-walks', type=int, default=20, help='Number of walks per source. Default is 10.')
     parser.add_argument('--window-size', type=int, default=4, help='Context size for optimization. Default is 10.')
     parser.add_argument('--iter', default=10, type=int, help='Number of epochs in SGD')
-    parser.add_argument('--p', type=float, default=1, help='Return hyperparameter. Default is 1.')
-    parser.add_argument('--q', type=float, default=1, help='Inout hyperparameter. Default is 1.')
+    parser.add_argument('--p', type=float, default=2, help='Return hyperparameter. Default is 1.')
+    parser.add_argument('--q', type=float, default=0.5, help='Inout hyperparameter. Default is 1.')
 
     parser.add_argument('--weighted', dest='weighted', action='store_true', help='Default is weighted.')
     parser.add_argument('--unweighted', dest='unweighted', action='store_false')
@@ -105,31 +105,38 @@ def main(args):
 
 if __name__ == '__main__':
     # write_user_graph({3338745751776606, 3338812282191870})
-    args = parse_args()
-    main(args)
+    # args = parse_args()
+    # main(args)
     model = KeyedVectors.load('user_vec.model')
 
-    topn = 10
-    total = [0, 0]
+    topn = 256
+    total = [0, 0, 0]
     # users = random.sample(model.wv.index2entity, 10)
-    users = model.wv.index2entity[:10]
+    # users = model.wv.index2entity[:10]
+    users = select_users({3338745751776606, 3338812282191870})
+    print(users)
     for index in users:
         friends_num = 0
         fans_num = 0
-        for similar in model.wv.most_similar(index, topn=topn):
+        out_num = 0
+        for similar in model.wv.most_similar(str(index), topn=topn):
             similar = similar[0]
             friends = select_friends({index})
             fans = select_friends({similar})
             if similar in friends:
                 friends_num += 1
-            if index in fans:
+            elif index in fans:
                 fans_num += 1
+            else:
+                out_num += 1
         total[0] += friends_num
         total[1] += fans_num
+        total[2] += out_num
         print("相似用户中好友占比：%s，粉丝的占比：%s，无关系的占比%s，" %
               (friends_num/topn, fans_num/topn, (topn-friends_num-fans_num)/topn))
     print("总占比：好友%s，粉丝%s，无关系%s，" %
           (total[0]/(topn*10), total[1]/(topn*10), (topn*10-total[0]-total[1])/(topn*10)))
+    conn.close()
 # 7.23事件
 # 原创微博{3338745751776606, 3338812282191870}
 # 本数据参与用户1461，内部边1260
