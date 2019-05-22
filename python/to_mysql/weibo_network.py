@@ -3,7 +3,7 @@ import time
 
 
 def insertDB(conn):
-    with open("../../resources/weibo_network.txt", "r") as fr:
+    with open("../../resources/basic_data/weibo_network.txt", "r") as fr:
         sql = "insert into weibo_network (user_id, friends_count, friends, bi_followers_count, bi_followers) " \
               "VALUES (%s, %s, %s, %s, %s)"
         next(fr)

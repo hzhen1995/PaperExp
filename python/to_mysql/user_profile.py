@@ -36,7 +36,7 @@ def insertDB(conn, path):
 if __name__ == "__main__":
     start = time.time()
     conn = DB.MysqlConn()
-    insertDB(conn, ["../../resources/user_profile1.txt", "../../resources/user_profile2.txt"])
+    insertDB(conn, ["../../resources/basic_data/user_profile1.txt", "../../resources/basic_data/user_profile2.txt"])
     conn.close()
     print(time.time()-start)
 

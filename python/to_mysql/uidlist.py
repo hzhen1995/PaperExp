@@ -3,7 +3,7 @@ import time
 
 
 def insertDB(conn):
-    with open("../../resources/uidlist.txt", "r") as fr:
+    with open("../../resources/basic_data/uidlist.txt", "r") as fr:
         sql = "insert into uidlist (user_id, map_id) VALUES (%s, %s)"
         values_list = list()
         for count, line in enumerate(fr, 1):

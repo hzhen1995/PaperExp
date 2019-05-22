@@ -3,7 +3,7 @@ import time
 
 
 def insertDB(conn):
-    with open("../../resources/graph_170w_1month.txt", "r") as fr:
+    with open("../../resources/basic_data/graph_170w_1month.txt", "r") as fr:
         sql = "insert into graph_temp (user_id, friends_id, timestamp, follows_count) VALUES (%s, %s, %s, %s)"
         value_list = []
         next(fr)

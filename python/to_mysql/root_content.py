@@ -4,7 +4,7 @@ import time
 
 
 def insertDB(conn):
-    with open("../../resources/root_content.txt", "r") as fr:
+    with open("../../resources/basic_data/root_content.txt", "r") as fr:
         sql = "insert into root_content (original_mid, content) VALUES (%s, %s)"
         values_list = []
         for count, line in enumerate(fr, 1):
@@ -19,7 +19,7 @@ def insertDB(conn):
 
 
 def updateDB(conn):
-    with open("../../resources/total.txt", "r") as fr:
+    with open("../../resources/basic_data/total.txt", "r") as fr:
         sql = "update root_content set original_uid=%s, original_time=%s, retweet_num=%s, re_without_num=%s " \
               "where original_mid=%s"
         values_list = []
@@ -38,7 +38,7 @@ def updateDB(conn):
 
 
 def update_DB_copy(conn):
-    files = os.listdir("../../resources/retweetWithContent")
+    files = os.listdir("../../resources/basic_data/retweetWithContent")
     sql_update = "update root_content set original_uid=%s, original_time=%s, retweet_num=%s, " \
                  "re_with_num=re_with_num+%s where original_mid=%s"
     sql_select = "select * from uidlist"
@@ -48,7 +48,7 @@ def update_DB_copy(conn):
         user_dic[i[0]] = i[1]
     for i, file in enumerate(files, 1):
         print("第 ", i, " 个文件")
-        with open("../../resources/retweetWithContent/" + file, "r") as fr:
+        with open("../../resources/basic_data/retweetWithContent/" + file, "r") as fr:
             values_list = list()
             original_info = fr.readline().strip().split("	")
             for count, line in enumerate(fr, 1):

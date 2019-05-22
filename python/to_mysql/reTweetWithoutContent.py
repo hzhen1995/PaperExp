@@ -3,7 +3,7 @@ import time
 
 
 def insertDB(conn):
-    with open("../../resources/total.txt", "r") as fr:
+    with open("../../resources/basic_data/total.txt", "r") as fr:
         sql = "insert into retweetWithoutContent (original_mid, retweet_uid, retweet_time) VALUES (%s, %s, %s)"
         values_list = []
         for count, line in enumerate(fr, 1):

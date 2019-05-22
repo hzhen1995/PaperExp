@@ -4,11 +4,11 @@ import os
 
 
 def insertDB_copy(conn):
-    files = os.listdir("../../resources/retweetWithContent")
+    files = os.listdir("../../resources/basic_data/retweetWithContent")
     sql = "insert into retweetWithContent1 (retweet_mid, retweet_uid, retweet_time, retweet_text, original_mid) VALUES (%s, %s, %s, %s, %s)"
     for i, file in enumerate(files, 1):
         print("第 ", i, " 个文件")
-        with open("../../resources/retweetWithContent/"+file, "r") as fr:
+        with open("../../resources/basic_data/retweetWithContent/"+file, "r") as fr:
             values_list = []
             original_info = fr.readline().strip().split("	")
             for count, line in enumerate(fr, 1):
