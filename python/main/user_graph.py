@@ -57,8 +57,8 @@ def write_user_graph(params):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run node2vec.")
-    parser.add_argument('--input', nargs='?', default='user_graph.txt', help='Input graph path')
-    parser.add_argument('--output', nargs='?', default='user_vec.model', help='Embeddings path')
+    parser.add_argument('--input', nargs='?', default='../../resources/model/user_graph.txt', help='Input graph path')
+    parser.add_argument('--output', nargs='?', default='../../resources/model/user_vec.model', help='Embeddings path')
     parser.add_argument('--dimensions', type=int, default=128, help='Number of dimensions. Default is 128.')
     parser.add_argument('--walk-length', type=int, default=20, help='Length of walk per source. Default is 80.')
     parser.add_argument('--num-walks', type=int, default=20, help='Number of walks per source. Default is 10.')
@@ -105,17 +105,19 @@ def main(args):
 
 if __name__ == '__main__':
     # write_user_graph({3338745751776606, 3338812282191870})
-    # args = parse_args()
+    args = parse_args()
     # main(args)
-    model = KeyedVectors.load('user_vec.model')
+    model = KeyedVectors.load(args.output)
 
-    topn = 256
+    topn = 10
     total = [0, 0, 0]
     # users = random.sample(model.wv.index2entity, 10)
     # users = model.wv.index2entity[:10]
     users = select_users({3338745751776606, 3338812282191870})
     print(users)
     for index in users:
+        if index == 326454:
+            continue
         friends_num = 0
         fans_num = 0
         out_num = 0
@@ -123,19 +125,22 @@ if __name__ == '__main__':
             similar = similar[0]
             friends = select_friends({index})
             fans = select_friends({similar})
-            if similar in friends:
-                friends_num += 1
-            elif index in fans:
-                fans_num += 1
+            f1 = similar in friends
+            f2 = index in fans
+            if f1 or f2:
+                if f1:
+                    friends_num += 1
+                if f2:
+                    fans_num += 1
             else:
                 out_num += 1
         total[0] += friends_num
         total[1] += fans_num
         total[2] += out_num
         print("相似用户中好友占比：%s，粉丝的占比：%s，无关系的占比%s，" %
-              (friends_num/topn, fans_num/topn, (topn-friends_num-fans_num)/topn))
+              (friends_num/topn, fans_num/topn, out_num/topn))
     print("总占比：好友%s，粉丝%s，无关系%s，" %
-          (total[0]/(topn*10), total[1]/(topn*10), (topn*10-total[0]-total[1])/(topn*10)))
+          (total[0]/(topn*len(users)), total[1]/(topn*len(users)), total[2]/(topn*len(users))))
     conn.close()
 # 7.23事件
 # 原创微博{3338745751776606, 3338812282191870}
