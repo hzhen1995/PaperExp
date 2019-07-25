@@ -73,7 +73,7 @@ class RejectionModel(object):
                 & (pd_data.y < y + temp_range)
             density_list.append(pd_data[pd_data_index].count().x / temp_range ** 2)
         density = sum(density_list) / len(density_list)
-        self.unit_length = int(math.sqrt(3 / density))
+        self.unit_length = int(math.sqrt(3 / 1))
         # print(unit_length)
 
         # box plots
@@ -84,6 +84,7 @@ class RejectionModel(object):
             x = int(data[plot][0] // self.unit_length)
             y = int(data[plot][1] // self.unit_length)
             self.boxes[x][y].append(plot)
+        print(self.boxes)
 
         # rejection
         #        north
@@ -1256,10 +1257,15 @@ def generate_reconstruct_traffic_network():
     return reconstruct_network
 
 
-def total_operation(low_dim_embed):
-    # with open('../data/efficient_embeddings_low.pickle', 'rb') as f:
-    #     low_dim_embed = pickle.load(f)
-    rejection = RejectionModel(low_dim_embed)
+def total_operation(users_l_vec):
+    users_l_vec = np.array([
+        [-1, 3],
+        [5, 1],
+        [9, -4],
+        [3, 7],
+        [4, 6]
+    ])
+    rejection = RejectionModel(users_l_vec)
     rejection.show_raw_plot()
     print(len(rejection.boxes))
     rejection.handel_all_box()
@@ -1324,7 +1330,7 @@ if __name__ == '__main__':
     # fake_p2m_with_same_shape()
 
     # fake_p2m()
-    # total_operation()
+    total_operation("cc")
 
     # reconstruct_traffic_network = generate_reconstruct_traffic_network()
     # with open('../data/fake_reconstruct_same_shape_traffic_flow5.json', 'w') as data_file:

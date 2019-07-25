@@ -1,147 +1,88 @@
-import argparse
-import db.DB as DB
 import time
 import random
+import dao.social_networks_dao as snd
 import networkx as nx
 import node2vec as node2vec
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
-from gensim.models import Word2Vec
-from gensim.models import KeyedVectors
-conn = DB.MysqlConn()
+from gensim.models import Word2Vec, KeyedVectors
 
-def select_users(params):
-    if len(params) == 0:
-        return False
-    sql = "select retweet_uid from retweetWithoutContent where original_mid in %s"
-    r = conn.select(sql, params)
-    users = set(i[0] for i in r)
-    return users
+# user_graph_path = "../../resources/user_graph.txt"
+# user_vec_path = "../../resources/model/user_vec.model"
+user_graph_path = "../../resources/in_user_graph.txt"
+user_vec_path = "../../resources/model/in_user_vec.model"
 
-def select_friends(params):
-    if len(params) == 0:
-        return False
-    sql = "select friends from weibo_network where user_id in %s"
-    r = conn.select(sql, params)
-    friends = [j for i in r for j in i[0].strip().split("#")]
-    return friends
-
-def select_fans_num(params):
-    sql = "select followers_count from user_profile where user_id in " \
-          "(select user_id from uidlist where map_id in %s)"
-    r = conn.select(sql, params)
-    fans_num = sum(i[0] for i in r)
-    return fans_num
-
+"""
+    构建话题传播空间下用户关系文件
+    文件格式：好友 用户
+    params：原创微博id（集合类型）
+"""
 def write_user_graph(params):
-    # 获取全部用户map_id
-    users = select_users(params)
-    print("所选用户群体：", users.__len__())
-
-    # 获取用户好友，将用户节点及边存放入user_graph.txt
-    s = time.time()
+    users = snd.get_users_by_batch_original_mid(params)
+    print("话题传播空间用户群体数量：", len(users))
     edges_num = 0
-    with open("user_graph.txt", "w+", encoding='utf-8') as fw:
-        for i, user_id in enumerate(users, 1):
-            friends = select_friends({user_id})
-            for friend in friends:
+    # 获取用户好友，将用户节点及边存放入user_graph.txt
+    with open(user_graph_path, "w+", encoding='utf-8') as fw:
+        user_friends = snd.get_friends_by_batch_user(users)
+        for i, map_id in enumerate(user_friends.keys(), 1):
+            for friend in user_friends[map_id]:
                 # 仅使用参与用户构造网络
-                if (friend != ''):
+                # if friend != "":
+                if friend != "" and int(friend) in users:
                     edges_num += 1
-                    fw.write(friend + " " + str(user_id) + "\n")
-            if i % 50 == 0:
-                print(i)
-    print("用户边：", edges_num)
-    print(time.time()-s)
+                    fw.write(friend + " " + str(map_id) + "\n")
+    print("用户之间的关系边：", edges_num)
 
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Run node2vec.")
-    parser.add_argument('--input', nargs='?', default='../../resources/model/user_graph.txt', help='Input graph path')
-    parser.add_argument('--output', nargs='?', default='../../resources/model/user_vec.model', help='Embeddings path')
-    parser.add_argument('--dimensions', type=int, default=128, help='Number of dimensions. Default is 128.')
-    parser.add_argument('--walk-length', type=int, default=20, help='Length of walk per source. Default is 80.')
-    parser.add_argument('--num-walks', type=int, default=20, help='Number of walks per source. Default is 10.')
-    parser.add_argument('--window-size', type=int, default=4, help='Context size for optimization. Default is 10.')
-    parser.add_argument('--iter', default=10, type=int, help='Number of epochs in SGD')
-    parser.add_argument('--p', type=float, default=2, help='Return hyperparameter. Default is 1.')
-    parser.add_argument('--q', type=float, default=0.5, help='Inout hyperparameter. Default is 1.')
-
-    parser.add_argument('--weighted', dest='weighted', action='store_true', help='Default is weighted.')
-    parser.add_argument('--unweighted', dest='unweighted', action='store_false')
-    parser.set_defaults(weighted=False)
-
-    parser.add_argument('--directed', dest='directed', action='store_true', help='Default is directed.')
-    parser.add_argument('--undirected', dest='undirected', action='store_false')
-    parser.set_defaults(directed=True)
-
-    return parser.parse_args()
-
-def read_graph(args):
+def main():
     # 读取用户关系网络
-    if args.weighted:
-        G = nx.read_edgelist(args.input, nodetype=int, data=(('weight',float),), create_using=nx.DiGraph())
-    else:
-        G = nx.read_edgelist(args.input, nodetype=int, create_using=nx.DiGraph())
-        for edge in G.edges():
-            G[edge[0]][edge[1]]['weight'] = 1
-    if not args.directed:
-        G = G.to_undirected()
-
-    return G
-
-def learn_embeddings(walks, args):
+    nx_G = nx.read_edgelist(user_graph_path, nodetype=int, create_using=nx.DiGraph())
+    for edge in nx_G.edges():
+        nx_G[edge[0]][edge[1]]['weight'] = 1
+    G = node2vec.Graph(nx_G=nx_G, is_directed=True, p=2, q=0.5)
+    G.preprocess_transition_probs()
+    walks = G.simulate_walks(num_walks=20, walk_length=20)
     # 通过使用SGD优化Skipgram目标来学习表示
     walks = [list(map(str, walk)) for walk in walks]
-    model = Word2Vec(walks, size=args.dimensions, window=args.window_size, min_count=0, sg=1, iter=args.iter)
-    model.save(args.output)
-
-def main(args):
-    nx_G = read_graph(args)
-    G = node2vec.Graph(nx_G, args.directed, args.p, args.q)
-    G.preprocess_transition_probs()
-    walks = G.simulate_walks(args.num_walks, args.walk_length)
-    learn_embeddings(walks, args)
+    model = Word2Vec(walks, size=128, window=4, min_count=0, sg=1, iter=10)
+    model.save(user_vec_path)
 
 if __name__ == '__main__':
-    # write_user_graph({3338745751776606, 3338812282191870})
-    args = parse_args()
-    # main(args)
-    model = KeyedVectors.load(args.output)
+    # write_user_graph({"3338745751776606", "3338812282191870"})
+    # main()
+    model = KeyedVectors.load(user_vec_path)
+    # top_n = 10
+    # total = [0, 0, 0]
+    # # users = random.sample(model.wv.index2entity, 10)
+    # # users = model.wv.index2entity[:10]
+    # users = snd.get_users_by_batch_original_mid({"3338745751776606", "3338812282191870"})
+    #
+    # for user_id in users:
+    #     if user_id == 326454:
+    #         continue
+    #     friends_num = 0
+    #     fans_num = 0
+    #     out_num = 0
+    #     for similar in model.wv.most_similar(str(user_id), topn=top_n):
+    #         similar_user = similar[0]
+    #         friends = snd.get_friends_by_user(user_id)
+    #         fans = snd.get_friends_by_user(similar_user)
+    #         f1 = similar_user in friends
+    #         f2 = user_id in fans
+    #         if f1 or f2:
+    #             if f1:
+    #                 friends_num += 1
+    #             if f2:
+    #                 fans_num += 1
+    #         else:
+    #             out_num += 1
+    #     total[0] += friends_num
+    #     total[1] += fans_num
+    #     total[2] += out_num
+    #     print("相似用户中好友占比：%s，粉丝的占比：%s，无关系的占比%s，" %
+    #           (friends_num/top_n, fans_num/top_n, out_num/top_n))
+    # print("总占比：好友%s，粉丝%s，无关系%s，" %
+    #       (total[0]/(top_n*len(users)), total[1]/(top_n*len(users)), total[2]/(top_n*len(users))))
 
-    topn = 10
-    total = [0, 0, 0]
-    # users = random.sample(model.wv.index2entity, 10)
-    # users = model.wv.index2entity[:10]
-    users = select_users({3338745751776606, 3338812282191870})
-    print(users)
-    for index in users:
-        if index == 326454:
-            continue
-        friends_num = 0
-        fans_num = 0
-        out_num = 0
-        for similar in model.wv.most_similar(str(index), topn=topn):
-            similar = similar[0]
-            friends = select_friends({index})
-            fans = select_friends({similar})
-            f1 = similar in friends
-            f2 = index in fans
-            if f1 or f2:
-                if f1:
-                    friends_num += 1
-                if f2:
-                    fans_num += 1
-            else:
-                out_num += 1
-        total[0] += friends_num
-        total[1] += fans_num
-        total[2] += out_num
-        print("相似用户中好友占比：%s，粉丝的占比：%s，无关系的占比%s，" %
-              (friends_num/topn, fans_num/topn, out_num/topn))
-    print("总占比：好友%s，粉丝%s，无关系%s，" %
-          (total[0]/(topn*len(users)), total[1]/(topn*len(users)), total[2]/(topn*len(users))))
-    conn.close()
 # 7.23事件
 # 原创微博{3338745751776606, 3338812282191870}
 # 本数据参与用户1461，内部边1260
