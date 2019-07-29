@@ -1,7 +1,21 @@
+import datetime
 from typing import List, Set, Dict
 
 import db.DB as DB
 
+
+"""
+    查询原创微博信息
+    params：原创微博id
+    friends：用户好友map_id
+"""
+def get_original_info_by_original_mid(params: str) -> List[object]:
+    conn = DB.MysqlConn()
+    sql = "select * from root_content where original_mid = %s"
+    r = conn.select(sql, params)
+    original_info = list(r[0])
+    conn.close()
+    return original_info
 
 """
     查询批量微博下的全部用户
@@ -15,6 +29,26 @@ def get_users_by_batch_original_mid(params: Set[str]) -> Set[int]:
     users = set(i[0] for i in r)
     conn.close()
     return users
+
+"""
+    查询微博的一天内的转发记录
+    params：原创微博id
+    users：参与微博的用户map_id
+"""
+def get_retweet_by_original_mid(params: str) -> Dict[int, List[str]]:
+    conn = DB.MysqlConn()
+    original_info = get_original_info_by_original_mid(params)
+    sql = "select retweet_uid, retweet_time from retweetWithoutContent " \
+          "where retweet_time between %s and %s and original_mid = %s order by retweet_time asc"
+    r = conn.select(sql, (original_info[3], original_info[3] + datetime.timedelta(days=1), params))
+    hour = datetime.timedelta(hours=1)
+    user_behavior = {i: [] for i in range(24)}
+    for i in r:
+        # 转发微博距微博发布多少个时
+        dis_time = (i[1]-original_info[3]) // hour
+        user_behavior[dis_time].append(i[0])
+    conn.close()
+    return user_behavior
 
 """
     查询用户的全部好友
@@ -32,7 +66,7 @@ def get_friends_by_user(params: int) -> List[str]:
 """
     查询批量用户的全部好友
     params：用户map_id
-    mul_friends：key为用户map_id, value（列表类型）为用户好友map_id
+    user_friends：key为用户map_id, value（列表类型）为用户好友map_id
 """
 def get_friends_by_batch_user(params: Set[int]) -> Dict[int, List[str]]:
     conn = DB.MysqlConn()

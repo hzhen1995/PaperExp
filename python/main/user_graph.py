@@ -17,7 +17,7 @@ user_vec_path = "../../resources/model/in_user_vec.model"
     文件格式：好友 用户
     params：原创微博id（集合类型）
 """
-def write_user_graph(params):
+def built_user_graph(params):
     users = snd.get_users_by_batch_original_mid(params)
     print("话题传播空间用户群体数量：", len(users))
     edges_num = 0
@@ -47,9 +47,9 @@ def main():
     model.save(user_vec_path)
 
 if __name__ == '__main__':
-    # write_user_graph({"3338745751776606", "3338812282191870"})
+    built_user_graph({"3338745751776606", "3338812282191870"})
     # main()
-    model = KeyedVectors.load(user_vec_path)
+    # model = KeyedVectors.load(user_vec_path)
     # top_n = 10
     # total = [0, 0, 0]
     # # users = random.sample(model.wv.index2entity, 10)
