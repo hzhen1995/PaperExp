@@ -190,12 +190,21 @@ def get_box_from_around(self, cur_box_index):
         [left_down_box, down_box, right_down_box]
     ]
 if __name__ == "__main__":
-    around_box = [[1], [2], []]
-    no_node_around_box = []
-    for k in range(len(around_box)):
-        if len(around_box[k]) == 0:
-            no_node_around_box.append(around_box[k])
-
-    print(no_node_around_box)
-    no_node_around_box[0].append(2)
-    print(around_box)
+    around_box = [
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,9,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,1],
+        [1, 2,1,1,1,1,1,1,1,1,1,-1],
+        [1, 2,1,1,1,1,1,1,1,1,1,0]
+    ]
+    around_box = np.array(around_box)
+    # print(around_box[4-4:4+4+1, 6-4:6+4])
+    np.maximum(around_box, 0)
+    a = [1,2,3]
+    b = [1,5]
+    a += b
+    print(a)

@@ -12,21 +12,22 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from gensim.models import KeyedVectors
 
-user_vec_path = "../../resources/model/user_vec.model"
+
 # user_vec_path = "../../resources/model/in_user_vec.model"
 
 
-def get_data(path):
-    model = KeyedVectors.load(path)
+def get_data(params1, params2):
+    model = KeyedVectors.load(params1)
     users_h_vec = []
-    # users = model.wv.most_similar('1064965', topn=256)
-    # users = [i[0] for i in users]
-    users = list(snd.get_users_by_batch_original_mid({"3338745751776606", "3338812282191870"}))
-    users.remove(326454)
+    users = list(snd.get_users_by_batch_original_mid(params2))
+    print(len(users))
+    # users.remove(326454)
+    users.remove(837063)
+    users.remove(1271625)
+    users.remove(554865)
     for i, user_id in enumerate(users):
         users_h_vec.append(model[str(user_id)])
-        if i == 180:
-            break
+    print("====")
     # 使用t-sne降维
     users_h_vec = np.array(users_h_vec)
     t_sne = manifold.TSNE(n_components=2, init='pca', random_state=501)
@@ -272,32 +273,25 @@ class User2Pixel(object):
         # 往左下扩散
         else:
             self.boxes[cur_box_index[0] + 1][cur_box_index[1] - 1].append(cur_box.pop(1))
-if __name__ == '__main__':
-    # users_l_vec = np.array([
-    #     [0.0, 0.0],
-    #     [0.2, 0.2],
-    #     [0.6, 0.2],
-    #     [0.3, 1.7],
-    #     [1.5, 2.5],
-    #     [2.5, 2.5],
-    #     [3.6, 3.7],
-    #     [3.65, 3.65],
-    #     [5.0, 4.0],
-    #     [5.0, 6.0]
-    # ])
-    # users = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-    # users_l_vec, users = get_data(user_vec_path)
-    # pickle.dump(users_l_vec, open("../../resources/users_l_vec.pkl", "wb+"))
-    # pickle.dump(users, open("../../resources/users.pkl", "wb+"))
-    # users_l_vec = pickle.load(open("../../resources/users_l_vec.pkl", "rb+"))
-    # users = pickle.load(open("../../resources/users.pkl", "rb+"))
+if __name__ == '__main__':
+    user_vec_path = "../../resources/model/user_vec.model"
+    original_mid = {"3339187067795316", "3409823347274485", "3486534206012960",
+                    "3338460728295803", "3405653819760021", "3486542481846477"}
+    users_l_vec_path = "../../resources/users_l_vec.pkl"
+    users_path = "../../resources/users.pkl"
+    user_pixel_path = "../../resources/user_pixel.pkl"
+
+    # users_l_vec, users = get_data(user_vec_path, original_mid)
+    # pickle.dump(users_l_vec, open(users_l_vec_path, "wb"))
+    # pickle.dump(users, open(users_path, "wb"))
+    # users_l_vec = pickle.load(open(users_l_vec_path, "rb"))
+    # users = pickle.load(open(users_path, "rb"))
     plt.figure(figsize=(6, 5))
-    # plt.rcParams['savefig.dpi'] = 200
-    # plt.rcParams['figure.dpi'] = 200
+    # 原始分布
     # list_user_vec = users_l_vec.tolist()
     # for i in list_user_vec:
-    #     plt.scatter(i[0], i[1], 60)
+    #     plt.scatter(i[0], i[1], 20)
     # rm = User2Pixel(users_l_vec, users)
     # rm.cut()
     # rm.spread_from_origin()
@@ -309,16 +303,16 @@ if __name__ == '__main__':
     #             user_pixel[row][column] = user_pixel[row][column][0][2]
     #         else:
     #             user_pixel[row][column] = -1
-    # pickle.dump(user_pixel, open("../../resources/user_pixel.pkl", "wb+"))
+    # pickle.dump(user_pixel, open(user_pixel_path, "wb"))
 
-    user_pixel = pickle.load(open("../../resources/user_pixel.pkl", "rb+"))
+    user_pixel = pickle.load(open(user_pixel_path, "rb"))
     plt.xticks(range(len(user_pixel)))
     plt.yticks(range(len(user_pixel[0])))
     plt.grid(xdata=range(0, len(user_pixel)), ydata=range(0, len(user_pixel[0])))
     for row in range(len(user_pixel)):
         for column in range(len(user_pixel[0])):
             if user_pixel[row][column] != -1:
-                plt.scatter(column, len(user_pixel) - 1 - row, 60)
+                plt.scatter(column, len(user_pixel) - 1 - row, 20)
             else:
                 pass
     plt.show()

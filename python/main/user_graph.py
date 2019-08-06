@@ -7,35 +7,31 @@ import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from gensim.models import Word2Vec, KeyedVectors
 
-# user_graph_path = "../../resources/user_graph.txt"
-# user_vec_path = "../../resources/model/user_vec.model"
-user_graph_path = "../../resources/in_user_graph.txt"
-user_vec_path = "../../resources/model/in_user_vec.model"
 
 """
     构建话题传播空间下用户关系文件
     文件格式：好友 用户
     params：原创微博id（集合类型）
 """
-def built_user_graph(params):
-    users = snd.get_users_by_batch_original_mid(params)
+def built_user_graph(params1, params2):
+    users = snd.get_users_by_batch_original_mid(params1)
     print("话题传播空间用户群体数量：", len(users))
     edges_num = 0
     # 获取用户好友，将用户节点及边存放入user_graph.txt
-    with open(user_graph_path, "w+", encoding='utf-8') as fw:
+    with open(params2, "w+", encoding='utf-8') as fw:
         user_friends = snd.get_friends_by_batch_user(users)
         for i, map_id in enumerate(user_friends.keys(), 1):
             for friend in user_friends[map_id]:
                 # 仅使用参与用户构造网络
-                # if friend != "":
-                if friend != "" and int(friend) in users:
+                # if friend != "" and int(friend) in users:
+                if friend != "":
                     edges_num += 1
                     fw.write(friend + " " + str(map_id) + "\n")
     print("用户之间的关系边：", edges_num)
 
-def main():
+def main(params1, params2):
     # 读取用户关系网络
-    nx_G = nx.read_edgelist(user_graph_path, nodetype=int, create_using=nx.DiGraph())
+    nx_G = nx.read_edgelist(params1, nodetype=int, create_using=nx.DiGraph())
     for edge in nx_G.edges():
         nx_G[edge[0]][edge[1]]['weight'] = 1
     G = node2vec.Graph(nx_G=nx_G, is_directed=True, p=2, q=0.5)
@@ -44,12 +40,16 @@ def main():
     # 通过使用SGD优化Skipgram目标来学习表示
     walks = [list(map(str, walk)) for walk in walks]
     model = Word2Vec(walks, size=128, window=4, min_count=0, sg=1, iter=10)
-    model.save(user_vec_path)
+    model.save(params2)
 
 if __name__ == '__main__':
-    built_user_graph({"3338745751776606", "3338812282191870"})
-    # main()
-    # model = KeyedVectors.load(user_vec_path)
+    user_graph_path = "../../resources/user_graph1.txt"
+    user_vec_path = "../../resources/model/user_ve1c.model"
+    original_mid = {"3339187067795316", "3409823347274485", "3486534206012960",
+                    "3338460728295803", "3405653819760021", "3486542481846477"}
+    # built_user_graph(original_mid, user_graph_path)
+    # main(user_graph_path, user_vec_path)
+    # model = KeyedVect   ors.load(user_vec_path)
     # top_n = 10
     # total = [0, 0, 0]
     # # users = random.sample(model.wv.index2entity, 10)

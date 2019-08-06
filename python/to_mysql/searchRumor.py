@@ -18,15 +18,16 @@ def searchRumor(conn):
     sql2 = "SELECT * from user_profile WHERE user_id = %s"
     sql3 = "SELECT * from root_content WHERE original_uid = %s"
     sql4 = "SELECT * from root_content WHERE original_mid = %s"
-    original_list = conn.select(sql0, ["%韩寒%"])
+    original_list = conn.select(sql0, ["%转基因大米%"])
+    # original_list = conn.select(sql4, ["3405653819760021    "])
     for original in original_list:
         print(original)
 
 
 if __name__ == "__main__":
     conn = DB.MysqlConn()
-    search(conn)
-    # searchRumor(conn)
+    # search(conn)
+    searchRumor(conn)
     conn.close()
 
 
@@ -497,4 +498,3 @@ if __name__ == "__main__":
 # 谣言暴晒场 揪出谣言的幕后黑手_360安全中心 http://t.cn/zljMkFS
 # 3468437059834432  1944377545	2012-07-16-15:21:38	12 3
 # 【公安部新闻发言人武和平 劝君少骂互联网】劝君少骂互联网，是非曲直待商量。网民有时宣泄情绪，但大多嫉恶如仇，大是大非面前从不含糊。真话不说，谣言登场。掌握信息的人不说话或说得太少，就会和老百姓的信息需求产生矛盾。老百姓是主人，只有当群众知道一切能判断一切的时候，国家才有力量。
-

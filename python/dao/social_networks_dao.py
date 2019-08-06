@@ -51,6 +51,32 @@ def get_retweet_by_original_mid(params: str) -> Dict[int, List[str]]:
     return user_behavior
 
 """
+    统计
+    params：原创微博id
+"""
+def get_renum_by_original_mid(params: List[str]) -> List[int]:
+    conn = DB.MysqlConn()
+    rs = []
+    for mid in params:
+        original_info = get_original_info_by_original_mid(mid)
+        sql = "select retweet_time from retweetWithoutContent " \
+              "where retweet_time between %s and %s and original_mid = %s order by retweet_time asc"
+
+        r = conn.select(sql, (original_info[3], original_info[3] + datetime.timedelta(days=2), mid))
+        user_behavior = {i: 0 for i in range(12)}
+        hour = datetime.timedelta(hours=4)
+        retweet_num = 0
+        for i in r:
+            retweet_num += 1
+            # 转发微博距微博发布多少个时
+            dis_time = (i[0]-original_info[3]) // hour
+            user_behavior[dis_time] += 1
+        rs.append(list(user_behavior.values())[:10])
+    conn.close()
+    return rs
+
+
+"""
     查询用户的全部好友
     params：用户map_id
     friends：用户好友map_id
