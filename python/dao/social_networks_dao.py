@@ -63,15 +63,15 @@ def get_renum_by_original_mid(params: List[str]) -> List[int]:
               "where retweet_time between %s and %s and original_mid = %s order by retweet_time asc"
 
         r = conn.select(sql, (original_info[3], original_info[3] + datetime.timedelta(days=2), mid))
-        user_behavior = {i: 0 for i in range(12)}
-        hour = datetime.timedelta(hours=4)
+        user_behavior = {i: 0 for i in range(24)}
+        hour = datetime.timedelta(hours=2)
         retweet_num = 0
         for i in r:
             retweet_num += 1
             # 转发微博距微博发布多少个时
             dis_time = (i[0]-original_info[3]) // hour
             user_behavior[dis_time] += 1
-        rs.append(list(user_behavior.values())[:10])
+        rs.append(list(user_behavior.values())[:12])
     conn.close()
     return rs
 
@@ -104,15 +104,59 @@ def get_friends_by_batch_user(params: Set[int]) -> Dict[int, List[str]]:
 
 
 """
-    查询批量用户的粉丝数量
+    查询批量用户的基本信息
     params：用户map_id
     fans_num：粉丝数量
 """
-def get_fans_num_by_batch_user(params: Set[int]) -> int:
+def get_att_num_by__user(params: int) -> str:
     conn = DB.MysqlConn()
-    sql = "select followers_count from user_profile where user_id in (select user_id from uidlist where map_id in %s)"
-    r = conn.select(sql, params)
-    fans_num = sum(i[0] for i in r)
+    sql = "select gender, followers_count, friends_count from user_profile " \
+          "where user_id=(select user_id from uidlist where map_id=%s)"
+    r = conn.select(sql, params)[0]
+    if r[0] == "m":
+        profile = str(1) + "," + str(r[1]) + "," + str(r[2])
+    else:
+        profile = str(-1) + "," + str(r[1]) + "," + str(r[2])
     conn.close()
-    return fans_num
+    return profile
 
+def get_retwnum_by_user(params: Set[int]) -> int:
+    conn = DB.MysqlConn()
+    sql = "select count(1) from retweetwithoutcontent where retweet_uid in %s"
+    r = conn.select(sql, params)[0]
+    conn.close()
+    return r[0]
+
+def get_origNum_by_user(params: Set[int]) -> int:
+    conn = DB.MysqlConn()
+    sql = "select count(1) from root_content where original_uid=%s"
+    r = conn.select(sql, params)[0]
+    conn.close()
+    return r[0]
+
+def get_retweeted_num_by_user(params: Set[int]) -> int:
+    conn = DB.MysqlConn()
+    sql = "select count(1), sum(re_with_num) from root_content where original_uid in %s"
+    r = conn.select(sql, params)[0]
+    ans = 0
+    if r[0] != 0:
+        ans = r[1] / r[0]
+    conn.close()
+    return ans
+
+def is_in_paper(params: int) -> bool:
+    conn = DB.MysqlConn()
+    sql = "select count(1) from paper where user_id = %s"
+    r = conn.select(sql, params)[0][0]
+    if r == 0:
+        return False
+    elif r == 1:
+        return True
+    else:
+        print("错误")
+
+def insertPaper(params):
+    conn = DB.MysqlConn()
+    sql = "insert into paper (user_id, att, act, ret, fri, rel, pop) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    conn.execute(sql, params)
+    conn.close()

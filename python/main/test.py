@@ -191,9 +191,7 @@ def get_box_from_around(self, cur_box_index):
     ]
 if __name__ == "__main__":
     import random
-    around_box = [
-        [1, 2,1,1,1,1,1,1,1,1,1,1],
-        [1, 2,1,1,1,1,1,1,1,1,1,1]
-    ]
-    c1 = random.choice(range(3))
-    print(c1)
+    import pickle
+    a = pickle.load(open("../../resources/cnn_data/test_pred_A.pkl", 'rb'))
+    a = pickle.load(open("../../resources/cnn_data/test_pred_A.pkl", 'rb'))
+    print(len(a))

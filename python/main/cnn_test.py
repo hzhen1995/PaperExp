@@ -6,11 +6,12 @@ import torch
 import torch.nn as nn
 import torch.utils.data as Data
 from sklearn.metrics import classification_report
+from sklearn.metrics import roc_curve
 
 
 torch.manual_seed(1)
 train_path = "../../resources/cnn_data/big_data_train.pkl"
-test_path = "../../resources/cnn_data/big_data_test.pkl"
+test_path = "../../resources/cnn_data/big_data_test_A.pkl"
 # Hyper Parameters
 epoch = 14      # 训练整批数据多少次,
 batch_size = 512  # 批训练大小
@@ -56,7 +57,7 @@ test_set = FactDataLoader(test_path)
 
 # 将dataset放入DataLoader
 train_loader = Data.DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True, num_workers=1)
-test_loader = Data.DataLoader(dataset=test_set, batch_size=batch_size, shuffle=False, num_workers=1)
+test_loader = Data.DataLoader(dataset=test_set, batch_size=batch_size, shuffle=True, num_workers=1)
 
 class CNN(nn.Module):
     def __init__(self):
@@ -111,11 +112,42 @@ if __name__ == '__main__':
             print('\r%s %d%%' % (show_str, step * batch_size * 100 / len(train_set)), end="")
         evaluate = classification_report(y_true, y_pred, target_names=['class 1', 'class 0'])
         print("\n" + evaluate)
+        roc = roc_curve(y_true, y_pred)
+        print(roc)
         train_precision = train_precision / len(train_set)
         train_loss = train_loss / step
-        print('第{}次训练：loss值：{}准确率：{}'.format(i+1, train_loss, train_precision))
-        loss_.append(train_loss)
-        pred.append(train_precision)
+        print('\n第{}次训练：loss值：{}准确率：{}'.format(i+1, train_loss, train_precision))
+
+
+        test_loss, test_precision = 0, 0
+        y_true = []
+        y_pred = []
+        for step, (batch_x, batch_y) in enumerate(test_loader):
+            batch_y = batch_y.view(-1)
+            output = model(batch_x)
+            loss = loss_function(output, batch_y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            y_pred += torch.max(output, 1)[1].data.numpy().tolist()
+
+            y_true += batch_y.data.numpy().tolist()
+
+            test_precision += (torch.max(output, 1)[1].data.numpy() == batch_y.data.numpy()).sum()
+            test_loss += loss.item()
+            show_str = ('[%%-%ds]' % 30) % (int(30 * (step * batch_size) / len(test_set)) * "#")
+            print('\r%s %d%%' % (show_str, step * batch_size * 100 / len(test_set)), end="")
+
+        evaluate = classification_report(y_true, y_pred, target_names=['class 1', 'class 0'])
+        print("\n" + evaluate)
+        test_precision = test_precision / len(test_set)
+        test_loss = test_loss / step
+        print('\n第{}次测试：loss值：{}准确率：{}'.format(i + 1, test_loss, test_precision))
+
+        # pickle.dump(y_pred, open("../../resources/cnn_data/test_pred_C.pkl", "wb"))
+        loss_.append(test_loss)
+        pred.append(test_precision)
         f1.append(evaluate[-15:-10])
     print(loss_)
     print(pred)

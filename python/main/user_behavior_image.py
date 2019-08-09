@@ -50,9 +50,9 @@ def built_cnn_data(user_pixel, user_behavior_image):
                 temp_data.append(behavior_24[day - i])
             temp_label = behavior_24[day][7][7]
             if temp_label == 1:
-                data_1.append([temp_data, temp_label])
+                data_1.append([temp_data, temp_label, user])
             elif temp_label == 0:
-                data_0.append([temp_data, temp_label])
+                data_0.append([temp_data, temp_label, user])
             else:
                 print("错误了")
     data_0 = random.sample(data_0, 2000)
@@ -67,9 +67,8 @@ if __name__ == "__main__":
     user_pixel_path = "../../resources/user_pixel.pkl"
     train_path = "../../resources/cnn_data/big_data_train.pkl"
     test_path = "../../resources/cnn_data/big_data_test.pkl"
-
-    original_mid = ["3339187067795316", "3409823347274485", "3486534206012960",
-                    "3338460728295803", "3405653819760021", "3486542481846477"]
+    original_mid = {"3339187067795316", "3409823347274485", "3486534206012960",
+                    "3338460728295803", "3405653819760021", "3486542481846477"}
     big_data = []
     user_pixel = pickle.load(open(user_pixel_path, "rb"))
 
@@ -98,7 +97,6 @@ if __name__ == "__main__":
 
     random.shuffle(big_data)
     big_data_train, big_data_test = train_test_split(big_data, test_size=0.2, random_state=1)
-    pickle.dump(big_data_train, open(train_path, "wb"))
+    # pickle.dump(big_data_train, open(train_path, "wb"))
     pickle.dump(big_data_test, open(test_path, "wb"))
-    # big_data = pickle.load(open(big_data_path, "rb"))
-    # print(len(big_data))
+    # test_data = pickle.load(open(test_path, "rb"))
