@@ -127,9 +127,9 @@ class User2Pixel(object):
                     elif direction[1] == 1:
                         self.down(angle, cur_box_index, cur_box, no_node_around_box)
                     elif direction[2] == 1:
-                        self.right(angle, cur_box_index, cur_box, no_node_around_box)
+                        self.left(angle, cur_box_index, cur_box, no_node_around_box)
                     else:
-                        self.down(angle, cur_box_index, cur_box, no_node_around_box)
+                        self.up(angle, cur_box_index, cur_box, no_node_around_box)
                 # 螺旋方向 -> 右
                 if direction[0] == 1:
                     cur_box_index[1] += 1
